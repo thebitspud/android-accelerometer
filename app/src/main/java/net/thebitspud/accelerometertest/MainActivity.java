@@ -24,9 +24,12 @@ public class MainActivity extends AppCompatActivity implements AccelerometerList
 
     private TextView mainText;
 
+<<<<<<< HEAD
     private Gson gson;
     private ArrayList<Stride> data;
 
+=======
+>>>>>>> master
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -109,14 +112,20 @@ public class MainActivity extends AppCompatActivity implements AccelerometerList
         if(now > ltShort + 250) {
             ltShort = now;
             System.out.println("X = " + deltaX + " | Y = " + deltaY + " | Z = " + deltaZ);
+<<<<<<< HEAD
             data.add(new Stride(System.currentTimeMillis(), deltaX, deltaY, deltaZ));
+=======
+>>>>>>> master
         }
 
         if(now > ltLong + 750) {
             ltLong = now;
             mainText.setText("X = " + deltaX + "\nY = " + deltaY + "\nZ = " + deltaZ);
+<<<<<<< HEAD
             String toJson = gson.toJson(data);
             System.out.println(toJson);
+=======
+>>>>>>> master
         }
     }
 
