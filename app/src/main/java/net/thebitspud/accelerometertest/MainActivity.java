@@ -6,8 +6,12 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.Objects;
+
+import com.google.gson.Gson;
 
 public class MainActivity extends AppCompatActivity implements AccelerometerListener, SensorEventListener {
     private float deltaXMax = 0;
@@ -18,10 +22,16 @@ public class MainActivity extends AppCompatActivity implements AccelerometerList
     private float deltaY = 0;
     private float deltaZ = 0;
 
+    private TextView mainText;
+
+    private Gson gson;
+    private ArrayList<Stride> data;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mainText = findViewById(R.id.main_text);
 
         SensorManager sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         if (Objects.requireNonNull(sensorManager).getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) {
@@ -30,6 +40,9 @@ public class MainActivity extends AppCompatActivity implements AccelerometerList
             Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
             sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
         }
+
+        gson = new Gson();
+        data = new ArrayList<>();
     }
 
     @Override
@@ -61,6 +74,7 @@ public class MainActivity extends AppCompatActivity implements AccelerometerList
             AccelerometerManager.stopListening();
         }
     }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -82,28 +96,27 @@ public class MainActivity extends AppCompatActivity implements AccelerometerList
         deltaX = Math.abs(lastX - event.values[0]);
         deltaY = Math.abs(lastY - event.values[1]);
         deltaZ = Math.abs(lastZ - event.values[2] + (float) 9.8);
-
-        // if the change is below 2, it is just plain noise
-        if (deltaX < 2)
-            deltaX = 0;
-        if (deltaY < 2)
-            deltaY = 0;
-        if (deltaZ < 2)
-            deltaZ = 0;
     }
 
     // display the current x,y,z accelerometer values
 
-    private long lastTick = System.currentTimeMillis();
+    private long ltShort = System.currentTimeMillis(),
+            ltLong = System.currentTimeMillis();
 
     public void displayCurrentValues() {
         long now = System.currentTimeMillis();
 
-        if(now > lastTick + 1000) {
-            System.out.println("X = " + Float.toString(deltaX)
-            + " | Y = " + Float.toString(deltaY)
-            + " | Z = " + Float.toString(deltaZ));
-            lastTick = now;
+        if(now > ltShort + 250) {
+            ltShort = now;
+            System.out.println("X = " + deltaX + " | Y = " + deltaY + " | Z = " + deltaZ);
+            data.add(new Stride(System.currentTimeMillis(), deltaX, deltaY, deltaZ));
+        }
+
+        if(now > ltLong + 750) {
+            ltLong = now;
+            mainText.setText("X = " + deltaX + "\nY = " + deltaY + "\nZ = " + deltaZ);
+            String toJson = gson.toJson(data);
+            System.out.println(toJson);
         }
     }
 
@@ -123,5 +136,19 @@ public class MainActivity extends AppCompatActivity implements AccelerometerList
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
 
+    }
+}
+
+class Stride {
+    long ts;
+    float x;
+    float y;
+    float z;
+
+    public Stride(long ts, float x, float y, float z) {
+        this.ts = ts;
+        this.x = x;
+        this.y = y;
+        this.z = z;
     }
 }
